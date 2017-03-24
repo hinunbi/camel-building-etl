@@ -1,15 +1,19 @@
-Camel Router Spring Project
-===========================
+# camel-building-etl
+Apache Camel을 이용한 도로명주소 파일 ETL 통합
 
-To build this project use
+## 0. Preliminaries
+The zipkin server must be running on the local machine.
 
-    mvn install
+ActiveMQ must be running on the local machine.
 
-To run this project with Maven use
+## 1. Package this project
 
-    mvn camel:run
+    mvn clean package
 
-For more help see the Apache Camel documentation
+## 2. Run this project with Camel maven plugin or
 
-    http://camel.apache.org/
+    mvn clean camel:run
 
+## 3. Run this project with Spring boot maven plugin
+
+    mvn clean spring-boot:run

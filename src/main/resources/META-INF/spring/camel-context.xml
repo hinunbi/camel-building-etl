@@ -1,30 +1,138 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Configures the Camel Context-->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="
-       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+	<context:annotation-config />
+	<context:property-placeholder properties-ref="externalProperties" />
 
-  <camelContext xmlns="http://camel.apache.org/schema/spring">
-    <!-- here is a sample which processes the input files
-         (leaving them in place - see the 'noop' flag)
-         then performs content based routing on the message using XPath -->
-    <route>
-      <from uri="file:src/data?noop=true"/>
-      <choice>
-        <when>
-          <xpath>/person/city = 'London'</xpath>
-          <log message="UK message"/>
-          <to uri="file:target/messages/uk"/>
-        </when>
-        <otherwise>
-          <log message="Other message"/>
-          <to uri="file:target/messages/others"/>
-        </otherwise>
-      </choice>
-    </route>
-  </camelContext>
+	<bean id="externalProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="location" value="classpath:application.properties" />
+	</bean>
+
+	<bean id="properties" class="org.apache.camel.component.properties.PropertiesComponent">
+		<property name="initialProperties" ref="externalProperties" />
+	</bean>
+
+	<!-- Database Configuration -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${oracle.jdbc.driverClass}" />
+		<property name="url" value="${oracle.jdbc.url}" />
+		<property name="username" value="${oracle.jdbc.user.name}" />
+		<property name="password" value="${oracle.jdbc.user.password}" />
+	</bean>
+
+	<bean id="oracleTxManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="classpath:MyBatisConfig.xml" />
+		<property name="mapperLocations">
+			<util:list>
+				<value>classpath:mappers/**/*.xml</value>
+				<value>classpath:com/brm/etl/**/*.xml</value>
+			</util:list>
+		</property>
+	</bean>
+
+	<bean id="oracleTransactionPolicy" class="org.apache.camel.spring.spi.SpringTransactionPolicy">
+		<property name="transactionManager" ref="oracleTxManager" />
+		<property name="propagationBehaviorName" value="PROPAGATION_REQUIRED" />
+	</bean>
+
+	<bean id="mybatis" class="org.apache.camel.component.mybatis.MyBatisComponent">
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate" destroy-method="clearCache">
+		<constructor-arg index="0" ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- ActiveMQ -->
+	<bean id="amq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+		<property name="connectionFactory">
+			<bean id="pooledConnectionFactory" class="org.apache.activemq.pool.PooledConnectionFactory" init-method="start"
+				destroy-method="stop">
+				<property name="connectionFactory">
+					<bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+						<property name="brokerURL" value="tcp://localhost:61616" />
+						<property name="userName" value="hello" />
+						<property name="password" value="demo" />
+					</bean>
+				</property>
+			</bean>
+		</property>
+		<property name="cacheLevelName" value="CACHE_CONSUMER" />
+	</bean>
+
+	<bean id="buildingInfoLoader" class="com.brm.etl.biz.BuildingInfoLoader" />
+	<bean id="counterProcessor" class="com.brm.etl.biz.CounterProcessor" />
+	<bean id="runUtil" class="com.brm.util.RunUtil" />
+	<bean id="timeWatch" class="com.brm.util.TimeWatch" />
+
+	<!-- setup zipkin tracer -->
+	<bean id="zipkinTracer" class="org.apache.camel.zipkin.ZipkinTracer">
+		<property name="serviceName" value="camel-building-etl" />
+		<property name="hostName" value="localhost" />
+		<property name="port" value="9410" />
+		<property name="rate" value="1.0" />
+	</bean>
+
+	<camelContext xmlns="http://camel.apache.org/schema/spring">
+		<dataFormats>
+			<bindy id="buildingInfoFormat" type="Csv" classType="com.brm.etl.data.BuildingInfo" />
+			<json id="comtsmsdhMsg" library="Jackson" prettyPrint="true" unmarshalTypeName="com.brm.etl.Comtsmsdh" />
+		</dataFormats>
+
+		<!-- 빌딩 주소 로드 -->
+		<route id="buildingEtl" autoStartup="true">
+			<from
+				uri="file:target/juso/etl?
+								antInclude=build_*.txt&amp;
+								charset=MS949&amp;
+								move=../done/${file:name}.$simple{date:now:yyyyMMdd-HHmmss}&amp;
+								readLock=changed&amp;
+								readLockTimeout=30000&amp;
+								readLockCheckInterval=10000&amp;
+								noop=false" />
+			<transacted />
+			<log message="Etl file name : ${headers.CamelFileName}" />
+			<bean ref="timeWatch" method="start" />
+			<bean ref="counterProcessor" method="reset" />
+			<bean ref="buildingInfoLoader" method="reset" />
+			<removeProperty propertyName="CamelCharsetName" />
+			<unmarshal ref="buildingInfoFormat" />
+			<split streaming="true">
+				<simple>${body}</simple>
+				<doTry>
+					<!-- <log message="${body}" /> -->
+					<bean ref="buildingInfoLoader" method="load" />
+					<process ref="counterProcessor" />
+					<doCatch>
+						<exception>java.sql.SQLException</exception>
+						<bean ref="counterProcessor" method="handleException" />
+					</doCatch>
+				</doTry>
+			</split>
+			<onCompletion>
+				<bean ref="timeWatch" method="stop" />
+				<bean ref="counterProcessor" method="report" />
+				<bean ref="buildingInfoLoader" method="report" />
+			</onCompletion>
+		</route>
+
+		<!-- SMS 발신 -->
+		<route id="smsSend" autoStartup="true">
+			<from uri="direct:sms" />
+			<marshal ref="comtsmsdhMsg" />
+			<log message="${body}" />
+			<to uri="amq:SMS.AGENT?jmsMessageType=Text" />
+		</route>
+	</camelContext>
 
 </beans>

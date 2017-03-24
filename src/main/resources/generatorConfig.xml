@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE generatorConfiguration
+  PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+  "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+
+<generatorConfiguration>
+
+	<properties resource="application.properties" />
+
+	<classPathEntry location="/Users/jcha/.m2/repository/cn/guoyukun/jdbc/oracle-ojdbc6/11.2.0.3.0/oracle-ojdbc6-11.2.0.3.0.jar" />
+
+	<context id="StreetAddressTables" targetRuntime="MyBatis3Simple">
+		<jdbcConnection driverClass="${oracle.jdbc.driverClass}" connectionURL="${oracle.jdbc.url}" userId="${oracle.jdbc.user.name}"
+			password="${oracle.jdbc.user.password}">
+		</jdbcConnection>
+
+		<javaTypeResolver>
+			<property name="forceBigDecimals" value="false" />
+		</javaTypeResolver>
+
+		<javaModelGenerator targetPackage="com.brm.etl" targetProject="src/main/resources" />
+
+		<sqlMapGenerator targetPackage="com.brm.etl" targetProject="src/main/resources" />
+
+		<table schema="KUHDBA" tableName="BUILDING_INFO">
+			<property name="useActualColumnNames" value="true" />
+		</table>
+
+	</context>
+</generatorConfiguration>

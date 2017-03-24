@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="buildingInfo">
+
+	<insert id="insert" parameterType="com.brm.etl.data.BuildingInfo">
+	<![CDATA[
+		INSERT INTO
+		BUILDING_INFO
+		(
+			DONGCODE,
+			SIDO,
+			SIGUNGU,
+			DONG,
+			RI,
+			ISMOUNTAIN,
+			JIBUN1,
+			JIBUN2,
+			STREETCODE,
+			STREET,
+			ISUNDER,
+			BUILDINGNUM1,
+			BUILDINGNUM2,
+			BUILDING,
+			BUILDINGDETAIL,
+			BUILDINGCODE,
+			DONGSEQ,
+			HAENGDONGCODE,
+			HAENGDONG,
+			ZIPCODE,
+			ZIPSEQ,
+			MASSDESTINATION,
+			MOVEREASION,
+			GOSIDATE,
+			OLDADDRESS,
+			SIGUNGUBUILDING,
+			APT,
+			BASICDESTRICTNUM,
+			ISASIGNDETAILADDR,
+			REMARK1,
+			REMARK2
+		)
+		VALUES(
+			#{DONGCODE},
+			#{SIDO},
+			#{SIGUNGU},
+			#{DONG},
+			#{RI},
+			#{ISMOUNTAIN},
+			#{JIBUN1},
+			#{JIBUN2},
+			#{STREETCODE},
+			#{STREET},
+			#{ISUNDER},
+			#{BUILDINGNUM1},
+			#{BUILDINGNUM2},
+			#{BUILDING},
+			#{BUILDINGDETAIL},
+			#{BUILDINGCODE},
+			#{DONGSEQ},
+			#{HAENGDONGCODE},
+			#{HAENGDONG},
+			#{ZIPCODE},
+			#{ZIPSEQ},
+			#{MASSDESTINATION},
+			#{MOVEREASION},
+			#{GOSIDATE},
+			#{OLDADDRESS},
+			#{SIGUNGUBUILDING},
+			#{APT},
+			#{BASICDESTRICTNUM},
+			#{ISASIGNDETAILADDR},
+			#{REMARK1},
+			#{REMARK2}
+		)
+]]>
+	</insert>
+	<update id="update" parameterType="com.brm.etl.data.BuildingInfo">
+	<![CDATA[
+		UPDATE BUILDING_INFO
+		SET
+			DONGCODE          = #{DONGCODE},
+			SIGUNGU           = #{SIGUNGU},
+			DONG              = #{DONG},
+			RI                = #{RI},
+			ISMOUNTAIN        = #{ISMOUNTAIN},
+			JIBUN1            = #{JIBUN1},
+			JIBUN2            = #{JIBUN2},
+			STREETCODE        = #{STREETCODE},
+			STREET            = #{STREET},
+			ISUNDER           = #{ISUNDER},
+			BUILDINGNUM1      = #{BUILDINGNUM1},
+			BUILDINGNUM2      = #{BUILDINGNUM2},
+			BUILDING          = #{BUILDING},
+			BUILDINGDETAIL    = #{BUILDINGDETAIL},
+			BUILDINGCODE      = #{BUILDINGCODE},
+			DONGSEQ           = #{DONGSEQ},
+			HAENGDONGCODE     = #{HAENGDONGCODE},
+			HAENGDONG         = #{HAENGDONG},
+			ZIPCODE           = #{ZIPCODE},
+			ZIPSEQ            = #{ZIPSEQ},
+			MASSDESTINATION   = #{MASSDESTINATION},
+			MOVEREASION       = #{MOVEREASION},
+			GOSIDATE          = #{GOSIDATE},
+			OLDADDRESS        = #{OLDADDRESS},
+			SIGUNGUBUILDING   = #{SIGUNGUBUILDING},
+			APT               = #{APT},
+			BASICDESTRICTNUM  = #{BASICDESTRICTNUM},
+			ISASIGNDETAILADDR = #{ISASIGNDETAILADDR},
+			REMARK1           = #{REMARK1},
+			REMARK2           = #{REMARK2}
+		WHERE
+			BUILDINGCODE = #{BUILDINGCODE}
+
+]]>
+	</update>
+
+	<delete id="delete" parameterType="com.brm.etl.data.BuildingInfo">
+	<![CDATA[
+		DELETE
+		FROM
+			BUILDING_INFO
+		WHERE
+			BUILDINGCODE = #{BUILDINGCODE}
+]]>
+	</delete>
+
+	<select id="selectCount" parameterType="com.brm.etl.data.BuildingInfo" resultType="int">
+	<![CDATA[
+		SELECT COUNT(*)
+		FROM
+			BUILDING_INFO
+		WHERE
+			BUILDINGCODE = #{BUILDINGCODE}
+]]>
+	</select>
+
+</mapper>
