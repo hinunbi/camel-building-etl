@@ -8,7 +8,11 @@ The zipkin server must be running on the local machine.
 
 ActiveMQ must be running on the local machine.
 
+<<<<<<< HEAD
+	$ACTIVEMQ_HOME/bin$ ./activemq
+=======
 	$ACTIVEMQ_HOME/bin$ activemq
+>>>>>>> refs/remotes/origin/master
 
 ## 1. Package this project
 
