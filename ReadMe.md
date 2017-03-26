@@ -8,7 +8,7 @@ The zipkin server must be running on the local machine.
 
 ActiveMQ must be running on the local machine.
 
-	$ACTIVEMQ_HOME/bin$ activemq
+	$ACTIVEMQ_HOME/bin$ ./activemq
 
 ## 1. Package this project
 
