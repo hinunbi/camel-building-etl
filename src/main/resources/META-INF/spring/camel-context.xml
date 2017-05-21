@@ -75,14 +75,6 @@
 	<bean id="runUtil" class="com.brm.util.RunUtil" />
 	<bean id="timeWatch" class="com.brm.util.TimeWatch" />
 
-	<!-- setup zipkin tracer -->
-	<bean id="zipkinTracer" class="org.apache.camel.zipkin.ZipkinTracer">
-		<property name="serviceName" value="camel-building-etl" />
-		<property name="hostName" value="localhost" />
-		<property name="port" value="9410" />
-		<property name="rate" value="1.0" />
-	</bean>
-
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<dataFormats>
 			<bindy id="buildingInfoFormat" type="Csv" classType="com.brm.etl.data.BuildingInfo" />
